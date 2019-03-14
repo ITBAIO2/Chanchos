@@ -5,11 +5,11 @@ import numpy
 import os
 
 def main():
-    # simularHasta(20,1000) #Sacar # para simular todos los jusgos hasta X jugadores tantas veces como setee en la funcion para las dos variantes
-    playGames(1000, 4, True) #Sacar # para simular X cant de veces con X cant de jugadores, True para lobo tira toda la casa y False para tirar solo una pared
+    #simularHasta(20,1000)    #Sacar # para simular todos los jusgos hasta X jugadores tantas veces como setee en la funcion para las dos variantes
+    playGames(1000, 4, True)  #Sacar # para simular X cant de veces con X cant de jugadores, True para lobo tira toda la casa y False para tirar solo una pared
     playGames(1000, 4, False)
-    displayData(4) #Sacar # para mostrar estadisticas para X cant de jugadores con o sin "loboTiraTodo o dejar vacia la segunda variable para mostrar y comparar ambos casos"
-    #emptyCache()#Sacar # para resetear estadisticas
+    displayData(4,False)      #Sacar # para mostrar estadisticas para X cant de jugadores con o sin "loboTiraTodo o dejar vacia la segunda variable para mostrar y comparar ambos casos"
+    #emptyCache()             #Sacar # para resetear estadisticas
 
 class Player:
 
@@ -26,12 +26,18 @@ class Player:
             if self.loboTiraTodo:
                 self.state = {"verde": 0, "azul": 0, "colorado": 0, "amarillo": 0, "violeta": 0}
             else:
-                paredATirar = random.randint(0, 4)
+                cantParedesActualmente = 0
+                for value in self.state.values():
+                    if value == 1:
+                        cantParedesActualmente += 1
+                paredATirar = random.randint(0, cantParedesActualmente)
                 i = 0
-                for key in self.state.keys():
-                    if i == paredATirar:
-                        self.state[key] = 0
-                    i += 1
+                for key, val in self.state.items():
+                    if val != 0:
+                        if i == paredATirar:
+                            self.state[key] = 0
+                            break
+                        i += 1
         elif dado == 2:
             self.state["verde"] = 1
         elif dado == 3:

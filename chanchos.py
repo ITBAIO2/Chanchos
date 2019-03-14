@@ -6,8 +6,9 @@ import os
 
 def main():
     # simularHasta(20,1000) #Sacar # para simular todos los jusgos hasta X jugadores tantas veces como setee en la funcion para las dos variantes
-    #playGames(1800, 4, True) #Sacar # para simular X cant de veces con X cant de jugadores, True para lobo tira toda la casa y False para tirar solo una pared
-    displayData(4, False) #Sacar # para mostrar estadisticas para X cant de jugadores con o sin "loboTiraTodo o dejar vacia la segunda variable para mostrar y comparar ambos casos"
+    playGames(1000, 4, True) #Sacar # para simular X cant de veces con X cant de jugadores, True para lobo tira toda la casa y False para tirar solo una pared
+    playGames(1000, 4, False)
+    displayData(4) #Sacar # para mostrar estadisticas para X cant de jugadores con o sin "loboTiraTodo o dejar vacia la segunda variable para mostrar y comparar ambos casos"
     #emptyCache()#Sacar # para resetear estadisticas
 
 class Player:
@@ -58,16 +59,23 @@ class Game:
         for i in range(self.cantidadDeJugadores):
             self.createPlayer()
 
+        delay = 0
+        counter = 0
+        while random.randint(1, 6) != 1:
+            delay += 1
+
         while self.gameOver == False:
             self.turn += 1
-
             for jugador in self.jugadores:
-                assert isinstance(jugador, Player)
-                jugador.jugarRonda()
+                if counter < delay:
+                    counter += 1
+                else:
+                    assert isinstance(jugador, Player)
+                    jugador.jugarRonda()
 
-                if jugador.state == {"verde": 1, "azul": 1, "colorado": 1, "amarillo": 1, "violeta": 1}:
-                    self.gameOver = True
-                    return self.turn
+                    if jugador.state == {"verde": 1, "azul": 1, "colorado": 1, "amarillo": 1, "violeta": 1}:
+                        self.gameOver = True
+                        return self.turn
 
         return "error"
 
@@ -168,7 +176,6 @@ def displayData(cant,loboTiraTodo = None):
 
 
                     print("Cantidad de jugadores: " + str(cant))
-                    label = ""
                     if loboTiraTodo:
                         label = "Lobo tira todo"
                         print("Lobo tira todo: Si")

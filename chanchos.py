@@ -8,13 +8,13 @@ def main():
     #simularHasta(20,1000)    #Sacar # para simular todos los jusgos hasta X jugadores tantas veces como setee en la funcion para las dos variantes
     playGames(1000, 4, True)  #Sacar # para simular X cant de veces con X cant de jugadores, True para lobo tira toda la casa y False para tirar solo una pared
     playGames(1000, 4, False)
-    displayData(4,False)      #Sacar # para mostrar estadisticas para X cant de jugadores con o sin "loboTiraTodo o dejar vacia la segunda variable para mostrar y comparar ambos casos"
+    displayData(4, True)      #Sacar # para mostrar estadisticas para X cant de jugadores con o sin "loboTiraTodo o dejar vacia la segunda variable para mostrar y comparar ambos casos"
     #emptyCache()             #Sacar # para resetear estadisticas
 
 class Player:
 
     def __init__(self, loboTiraTodo):
-        self.state = {"verde": 0, "azul": 0, "colorado": 0, "amarillo": 0, "violeta": 0}
+        self.state = {"verde": False, "azul": False, "colorado": False, "amarillo": False, "violeta": False}
         self.loboTiraTodo = loboTiraTodo
 
     def throwDice(self):
@@ -24,31 +24,31 @@ class Player:
         dado = self.throwDice()
         if dado == 1:
             if self.loboTiraTodo:
-                self.state = {"verde": 0, "azul": 0, "colorado": 0, "amarillo": 0, "violeta": 0}
+                self.state = {"verde": False, "azul": False, "colorado": False, "amarillo": False, "violeta": False}
             else:
                 cantParedesActualmente = 0
                 for value in self.state.values():
-                    if value == 1:
+                    if value:
                         cantParedesActualmente += 1
                 paredATirar = random.randint(0, cantParedesActualmente)
                 i = 0
                 for key, val in self.state.items():
-                    if val != 0:
+                    if val:
                         if i == paredATirar:
-                            self.state[key] = 0
+                            self.state[key] = False
                             break
                         i += 1
         elif dado == 2:
-            self.state["verde"] = 1
+            self.state["verde"] = True
         elif dado == 3:
-            self.state["azul"] = 1
+            self.state["azul"] = True
         elif dado == 4:
-            self.state["amarillo"] = 1
+            self.state["amarillo"] = True
         elif dado == 5:
-            self.state["violeta"] = 1
+            self.state["violeta"] = True
         elif dado == 6:
-            if self.state == {"verde": 1, "azul": 1, "colorado": 0, "amarillo": 1, "violeta": 1}:
-                self.state["colorado"] = 1
+            if self.state == {"verde": True, "azul": True, "colorado": 0, "amarillo": True, "violeta": True}:
+                self.state["colorado"] = True
 
 class Game:
 
@@ -57,8 +57,6 @@ class Game:
         self.loboTiraTodo = loboTiraTodo
 
         self.turn = 0
-        self.gameStart = False
-        self.gameOver = False
         self.jugadores = []
 
     def playGame(self):
@@ -67,10 +65,10 @@ class Game:
 
         delay = 0
         counter = 0
-        while random.randint(1, 6) != 1:
+        while random.randint(1, 6) != 6:
             delay += 1
 
-        while self.gameOver == False:
+        while True:
             self.turn += 1
             for jugador in self.jugadores:
                 if counter < delay:
@@ -79,17 +77,9 @@ class Game:
                     assert isinstance(jugador, Player)
                     jugador.jugarRonda()
 
-                    if jugador.state == {"verde": 1, "azul": 1, "colorado": 1, "amarillo": 1, "violeta": 1}:
-                        self.gameOver = True
+                    if jugador.state == {"verde": True, "azul": True, "colorado": True, "amarillo": True, "violeta": True}:
                         return self.turn
 
-        return "error"
-
-    def resetGame(self):
-        self.turn = 0
-        self.gameStart = False
-        self.gameOver = False
-        self.jugadores = []
 
     def createPlayer(self):
         self.jugadores.append(Player(self.loboTiraTodo))
@@ -97,20 +87,20 @@ class Game:
 
 def playGames(numOfGames, cantDeJugadores, loboTiraTodo):
 
-    newStats = {}
+    stats = {}
 
     for i in range(numOfGames):
         juego = Game(cantDeJugadores, loboTiraTodo)
         cantRondas = juego.playGame()
-        if str(cantRondas) in list(newStats.keys()):
-            newStats[str(cantRondas)] += 1
+        if str(cantRondas) in list(stats.keys()):
+            stats[str(cantRondas)] += 1
         else:
-            newStats[str(cantRondas)] = 1
+            stats[str(cantRondas)] = 1
 
-    newStats["loboTiraTodo"] = loboTiraTodo
-    newStats['cantDeJugadores'] = cantDeJugadores
+    stats["loboTiraTodo"] = loboTiraTodo
+    stats['cantDeJugadores'] = cantDeJugadores
 
-    saveGames(newStats)
+    saveGames(stats)
 
 
 def saveGames(newStat):
@@ -301,4 +291,3 @@ def simularHasta(cantidadDeJugadores, cantidadDeVeces): #Con las dos variantes d
 
 if __name__ == '__main__':
     main()
-

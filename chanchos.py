@@ -3,13 +3,16 @@ import json
 import matplotlib.pyplot as plt
 import numpy
 import os
+from scipy.stats import norm
 
 def main():
     #simularHasta(20,1000)    #Sacar # para simular todos los jusgos hasta X jugadores tantas veces como setee en la funcion para las dos variantes
-    playGames(1000, 4, True)  #Sacar # para simular X cant de veces con X cant de jugadores, True para lobo tira toda la casa y False para tirar solo una pared
-    playGames(1000, 4, False)
-    displayData(4, True)      #Sacar # para mostrar estadisticas para X cant de jugadores con o sin "loboTiraTodo o dejar vacia la segunda variable para mostrar y comparar ambos casos"
+    #playGames(10, 4, True)  #Sacar # para simular X cant de veces con X cant de jugadores, True para lobo tira toda la casa y False para tirar solo una pared
+    #playGames(10, 4, False)
+    #displayData(4)      #Sacar # para mostrar estadisticas para X cant de jugadores con o sin "loboTiraTodo o dejar vacia la segunda variable para mostrar y comparar ambos casos"
     #emptyCache()             #Sacar # para resetear estadisticas
+
+    jugarHastaErrorMenorQue(0.1, 95, 4, True)
 
 class Player:
 
@@ -142,7 +145,7 @@ def emptyCache():
     f.write("")
     f.close()
 
-def displayData(cant,loboTiraTodo = None):
+def displayData(cant,loboTiraTodo= None, error= None, confianza= None):
     if os.path.isfile('Estadisticas Chanchos.txt') == False:
         print("No hay estadisticas")
     else:
@@ -195,6 +198,9 @@ def displayData(cant,loboTiraTodo = None):
                     print("La media es: " + str(numpy.mean(lista))[:5])
                     print("La mediana es: " + str(numpy.median(lista))[:5])
                     print("El Desvio Estandar es: " + str(numpy.std(lista))[:5])
+
+                    if error != None and confianza != None:
+                        print("El HW para una confianza de " + str(confianza) + "% es: " + str(error))
 
                     plt.bar(list(purStat.keys()), list(purStat.values()), color='g', label=label)
                     plt.legend(loc='upper right')
@@ -282,11 +288,67 @@ def displayData(cant,loboTiraTodo = None):
                     plt.legend(loc='upper right')
                     plt.show()
 
+def getStats(cant,loboTiraTodo = None):
+    if os.path.isfile('Estadisticas Chanchos.txt') == False:
+        print("No hay estadisticas")
+    else:
+        f = open('Estadisticas Chanchos.txt', 'r')
+
+        lines = f.read()
+        f.close()
+
+        if lines == "":
+            print("No hay estadisticas")
+            return
+        stats = json.loads(lines)
+
+        nostat = True
+        for stat in stats:
+            if stat["cantDeJugadores"] == cant and stat["loboTiraTodo"] == loboTiraTodo:
+                nostat = False
+
+                veces = 0
+                purStat = {}
+
+                for key, value in list(stat.items()):
+                    if key not in ["cantDeJugadores", "loboTiraTodo"]:
+                        veces += value
+                        purStat[int(key)] = int(value)
+
+                maxValue = 0
+                maxKey = 0
+                lista = []
+                for key, value in list(purStat.items()):
+                    if value > maxValue:
+                        maxValue = value
+                        maxKey = key
+                    for j in range(value):
+                        lista.append(key)
+
+                return {"moda": maxKey, "media": numpy.mean(lista), "mediana": numpy.median(lista), "desvio": numpy.std(lista), "n": veces}
+
+        if nostat:
+            print("no hay estadisticas")
 
 def simularHasta(cantidadDeJugadores, cantidadDeVeces): #Con las dos variantes del juego
     for i in range(1,cantidadDeJugadores + 1):
         playGames(cantidadDeVeces,i,False)
         playGames(cantidadDeVeces, i, True)
+
+def jugarHastaErrorMenorQue(error, confianza, cantidadDeJugadores, loboTiraTodo):
+    emptyCache()
+    playGames(10,cantidadDeJugadores,loboTiraTodo)
+    stats = getStats(cantidadDeJugadores,loboTiraTodo)
+    z = norm.ppf(1 - ((1 - (confianza/100))/2))
+    e = z * stats["desvio"] / (stats["n"] ** (1/2))
+
+    while e > error:
+        n = (z * stats["desvio"] / error) ** 2
+        playGames(int(n - stats["n"]),cantidadDeJugadores,loboTiraTodo)
+        stats = getStats(cantidadDeJugadores, loboTiraTodo)
+        e = z * stats["desvio"] / (stats["n"] ** (1 / 2))
+
+    displayData(cantidadDeJugadores, loboTiraTodo, error = e, confianza = confianza)
 
 
 if __name__ == '__main__':

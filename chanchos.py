@@ -5,17 +5,18 @@ import numpy
 import os
 from scipy.stats import norm
 
-def main():
-    #simularHasta(20,1000)    #Sacar # para simular todos los jusgos hasta X jugadores tantas veces como setee en la funcion para las dos variantes
-    #playGames(10, 4, True)  #Sacar # para simular X cant de veces con X cant de jugadores, True para lobo tira toda la casa y False para tirar solo una pared
-    #playGames(10, 4, False)
-    #displayData(4)      #Sacar # para mostrar estadisticas para X cant de jugadores con o sin "loboTiraTodo o dejar vacia la segunda variable para mostrar y comparar ambos casos"
-    #emptyCache()             #Sacar # para resetear estadisticas
 
-    jugarHastaErrorMenorQue(0.1, 95, 4, True)
+def main():
+    #emptyCache()  # Sacar # para resetear estadisticas
+    # simularHasta(20,1000)    #Sacar # para simular todos los jusgos hasta X jugadores tantas veces como setee en la funcion para las dos variantes
+    #playGames(1000, 4, True)  # Sacar # para simular X cant de veces con X cant de jugadores, True para lobo tira toda la casa y False para tirar solo una pared
+    #playGames(1000, 4, False)
+    #displayData(4, True, confianza=99.99)  # Sacar # para mostrar estadisticas para X cant de jugadores con o sin "loboTiraTodo o dejar vacia la segunda variable para mostrar y comparar ambos casos"
+
+    jugarHastaErrorMenorQue(0.1, 95, 4, False)
+
 
 class Player:
-
     def __init__(self, loboTiraTodo):
         self.state = {"verde": False, "azul": False, "colorado": False, "amarillo": False, "violeta": False}
         self.loboTiraTodo = loboTiraTodo
@@ -53,8 +54,8 @@ class Player:
             if self.state == {"verde": True, "azul": True, "colorado": 0, "amarillo": True, "violeta": True}:
                 self.state["colorado"] = True
 
-class Game:
 
+class Game:
     def __init__(self, cantidadDeJugadores, loboTiraTodo):
         self.cantidadDeJugadores = cantidadDeJugadores
         self.loboTiraTodo = loboTiraTodo
@@ -80,16 +81,15 @@ class Game:
                     assert isinstance(jugador, Player)
                     jugador.jugarRonda()
 
-                    if jugador.state == {"verde": True, "azul": True, "colorado": True, "amarillo": True, "violeta": True}:
+                    if jugador.state == {"verde": True, "azul": True, "colorado": True, "amarillo": True,
+                                         "violeta": True}:
                         return self.turn
-
 
     def createPlayer(self):
         self.jugadores.append(Player(self.loboTiraTodo))
 
 
 def playGames(numOfGames, cantDeJugadores, loboTiraTodo):
-
     stats = {}
 
     for i in range(numOfGames):
@@ -124,10 +124,11 @@ def saveGames(newStat):
 
     nostat = True
     for oldStat in oldstats:
-        if oldStat["cantDeJugadores"] == newStat["cantDeJugadores"] and oldStat["loboTiraTodo"] == newStat["loboTiraTodo"]:
+        if oldStat["cantDeJugadores"] == newStat["cantDeJugadores"] and oldStat["loboTiraTodo"] == newStat[
+            "loboTiraTodo"]:
             nostat = False
             for newKey, newValue in list(newStat.items()):
-                if newKey in list(oldStat.keys()) and newKey not in ["cantDeJugadores","loboTiraTodo"]:
+                if newKey in list(oldStat.keys()) and newKey not in ["cantDeJugadores", "loboTiraTodo"]:
                     oldStat[newKey] += newStat[newKey]
                 else:
                     if newKey not in ["cantDeJugadores", "loboTiraTodo"]:
@@ -140,12 +141,14 @@ def saveGames(newStat):
     f.write(json.dumps(oldstats))
     f.close()
 
+
 def emptyCache():
     f = open('Estadisticas Chanchos.txt', 'w')
     f.write("")
     f.close()
 
-def displayData(cant,loboTiraTodo= None, error= None, confianza= None):
+
+def displayData(cant, loboTiraTodo=None, error=None, confianza=None):
     if os.path.isfile('Estadisticas Chanchos.txt') == False:
         print("No hay estadisticas")
     else:
@@ -173,7 +176,6 @@ def displayData(cant,loboTiraTodo= None, error= None, confianza= None):
                             veces += value
                             purStat[int(key)] = int(value)
 
-
                     print("Cantidad de jugadores: " + str(cant))
                     if loboTiraTodo:
                         label = "Lobo tira todo"
@@ -199,8 +201,13 @@ def displayData(cant,loboTiraTodo= None, error= None, confianza= None):
                     print("La mediana es: " + str(numpy.median(lista))[:5])
                     print("El Desvio Estandar es: " + str(numpy.std(lista))[:5])
 
-                    if error != None and confianza != None:
-                        print("El HW para una confianza de " + str(confianza) + "% es: " + str(error))
+                    if confianza is not None:
+                        if error is not None:
+                            print("El HW para una confianza de " + str(confianza) + "% es: " + str(error))
+                        else:
+                            z = norm.ppf(1 - ((1 - (confianza / 100)) / 2))
+                            e = z * numpy.std(lista) / (veces ** (1 / 2))
+                            print("El HW para una confianza de " + str(confianza) + "% es: " + str(e))
 
                     plt.bar(list(purStat.keys()), list(purStat.values()), color='g', label=label)
                     plt.legend(loc='upper right')
@@ -215,7 +222,7 @@ def displayData(cant,loboTiraTodo= None, error= None, confianza= None):
             vecesCon = 0
             vecesSin = 0
             for stat in stats:
-                if stat["cantDeJugadores"] == cant and stat["loboTiraTodo"] == True:
+                if stat["cantDeJugadores"] == cant and stat["loboTiraTodo"] is True:
                     nostat = False
 
                     for key, value in list(stat.items()):
@@ -223,7 +230,7 @@ def displayData(cant,loboTiraTodo= None, error= None, confianza= None):
                             vecesCon += value
                             purStatCon[int(key)] = int(value)
 
-                if stat["cantDeJugadores"] == cant and stat["loboTiraTodo"] == False:
+                if stat["cantDeJugadores"] == cant and stat["loboTiraTodo"] is False:
                     nostat = False
 
                     for key, value in list(stat.items()):
@@ -275,21 +282,22 @@ def displayData(cant,loboTiraTodo= None, error= None, confianza= None):
 
                     print("Tamano de la muestra: " + str(vecesSin))
 
-
-
                     print("La moda es: " + str(maxKeySin) + " con " + str(maxValueSin) + " apariciones, " + str(
                         maxValueSin * 100 / vecesSin)[:4] + "% del total de la muestra")
                     print("La media es: " + str(numpy.mean(listaSin))[:5])
                     print("La mediana es: " + str(numpy.median(listaSin))[:5])
                     print("El Desvio Estandar es: " + str(numpy.std(listaSin))[:5])
 
-                    plt.bar(list(purStatCon.keys()), list(purStatCon.values()), color='g', alpha = 0.4, label='Lobo tira todo') #con = verde
-                    plt.bar(list(purStatSin.keys()), list(purStatSin.values()), color='b', alpha = 0.4, label='Lobo no tira todo') #sin = azul
+                    plt.bar(list(purStatCon.keys()), list(purStatCon.values()), color='g', alpha=0.4,
+                            label='Lobo tira todo')  # con = verde
+                    plt.bar(list(purStatSin.keys()), list(purStatSin.values()), color='b', alpha=0.4,
+                            label='Lobo no tira todo')  # sin = azul
                     plt.legend(loc='upper right')
                     plt.show()
 
-def getStats(cant,loboTiraTodo = None):
-    if os.path.isfile('Estadisticas Chanchos.txt') == False:
+
+def getStats(cant, loboTiraTodo=None):
+    if os.path.isfile('Estadisticas Chanchos.txt') is False:
         print("No hay estadisticas")
     else:
         f = open('Estadisticas Chanchos.txt', 'r')
@@ -325,30 +333,33 @@ def getStats(cant,loboTiraTodo = None):
                     for j in range(value):
                         lista.append(key)
 
-                return {"moda": maxKey, "media": numpy.mean(lista), "mediana": numpy.median(lista), "desvio": numpy.std(lista), "n": veces}
+                return {"moda": maxKey, "media": numpy.mean(lista), "mediana": numpy.median(lista),
+                        "desvio": numpy.std(lista), "n": veces}
 
         if nostat:
             print("no hay estadisticas")
 
-def simularHasta(cantidadDeJugadores, cantidadDeVeces): #Con las dos variantes del juego
-    for i in range(1,cantidadDeJugadores + 1):
-        playGames(cantidadDeVeces,i,False)
+
+def simularHasta(cantidadDeJugadores, cantidadDeVeces):  # Con las dos variantes del juego
+    for i in range(1, cantidadDeJugadores + 1):
+        playGames(cantidadDeVeces, i, False)
         playGames(cantidadDeVeces, i, True)
+
 
 def jugarHastaErrorMenorQue(error, confianza, cantidadDeJugadores, loboTiraTodo):
     emptyCache()
-    playGames(10,cantidadDeJugadores,loboTiraTodo)
-    stats = getStats(cantidadDeJugadores,loboTiraTodo)
-    z = norm.ppf(1 - ((1 - (confianza/100))/2))
-    e = z * stats["desvio"] / (stats["n"] ** (1/2))
+    playGames(10, cantidadDeJugadores, loboTiraTodo)
+    stats = getStats(cantidadDeJugadores, loboTiraTodo)
+    z = norm.ppf(1 - ((1 - (confianza / 100)) / 2))
+    e = z * stats["desvio"] / (stats["n"] ** (1 / 2))
 
     while e > error:
         n = (z * stats["desvio"] / error) ** 2
-        playGames(int(n - stats["n"]),cantidadDeJugadores,loboTiraTodo)
+        playGames(int(n - stats["n"]), cantidadDeJugadores, loboTiraTodo)
         stats = getStats(cantidadDeJugadores, loboTiraTodo)
         e = z * stats["desvio"] / (stats["n"] ** (1 / 2))
 
-    displayData(cantidadDeJugadores, loboTiraTodo, error = e, confianza = confianza)
+    displayData(cantidadDeJugadores, loboTiraTodo, error=e, confianza=confianza)
 
 
 if __name__ == '__main__':
